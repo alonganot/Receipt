@@ -1,11 +1,13 @@
 import { createWorker } from "tesseract.js";
+import { improveImage } from "./improveImage.js";
 
-const RECEIPT_SRC = "./receipts/hebreceipt.png";
+const IMAGE_NAME = "eupreceipt";
+
 const getTextFromImage = async () => {
   const worker = await createWorker("heb+eng");
   const {
     data: { text },
-  } = await worker.recognize(RECEIPT_SRC);
+  } = await worker.recognize(`./receipts/blackandwhite/${IMAGE_NAME}BW.png`);
   await worker.terminate();
 
   return text;
@@ -52,15 +54,18 @@ const convertNumbers = (matrix) => {
 const convertToTable = (text) => {
   let onlyEndWithNums = text.split("\n").filter((line) => /\d$/.test(line));
   let splittedStringMatrix = onlyEndWithNums.map((str) =>
-    str.match(/(?:\d+(\.\d+)?|[^\d\s]+(?: [^\d\s]+)?)/g)
+    str.match(/(?:\d+(\.\d+)?|[^\d\s]+(?: [^\d\s]+)?)/g) //this somehow magically converts each string into an array
   );
-  
+
   return convertNumbers(mergeAdjacentCells(splittedStringMatrix));
 };
 
+await improveImage(IMAGE_NAME);
 let text = await getTextFromImage();
 
 console.log(convertToTable(text));
+
+// logic to reverse the strings if its hebrew, not sure if needed
 
 // let matrix = onlyEndWithNums.map(str => str.split(' '))
 //     .map(arr => arr.map(reverseIfContainsHebrew))
